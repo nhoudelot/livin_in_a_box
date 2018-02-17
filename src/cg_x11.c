@@ -1,5 +1,6 @@
 #define GL_GLEXT_PROTOTYPES
 #define GLX_GLXEXT_PROTOTYPES
+#include <GL/glew.h>
 #include "cg_x11.h"
 #include "cg_constants.h"
 #include <stdlib.h>
@@ -12,7 +13,6 @@ Rotation                cg_rotation;
 short                   cg_orig_rate;
 int                     cg_screen_mode;
 GLXContext              cg_context;
-
 
 void SetScreenSize(int width, int height, XVisualInfo *visual){
    XRRScreenSize *sizes;
@@ -132,22 +132,25 @@ int CreateScene(int width, int height, int mode){
    cg_window            = XCreateWindow(cg_display, RootWindow(cg_display, visual->screen),
                                         0, 0, width, height, 0, visual->depth, InputOutput,
                                         visual->visual, CWBorderPixel | CWColormap | CWEventMask, &swa);
-   if(!cg_window){
-      return(-1);
-   }
-   cg_context           = glXCreateContextAttribsARB(cg_display, fbc[0], NULL, True, gl4attr);
 
-   if(mode == CG_FULLSCREEN){
-      /* Set to fullscreen */
-      fullscreen = XInternAtom(cg_display, "_NET_WM_STATE_FULLSCREEN", False);
-      XChangeProperty(cg_display, cg_window, XInternAtom(cg_display, "_NET_WM_STATE", False), 
-                      XA_ATOM, 32, PropModeReplace,
-                      (unsigned char *)&fullscreen, 1);
-      HideCursor();
-      /* Get the current screen size and set the new one */
-      SetScreenSize(width, height, visual);
-   }
+      PFNGLXCREATECONTEXTATTRIBSARBPROC glXCreateContextAttribsARB = 0;
+      glXCreateContextAttribsARB = (PFNGLXCREATECONTEXTATTRIBSARBPROC) glXGetProcAddressARB( (const GLubyte *) "glXCreateContextAttribsARB" );
 
+      if(!cg_window){
+          return(-1);
+      }
+      cg_context           = glXCreateContextAttribsARB(cg_display, fbc[0], NULL, True, gl4attr);
+
+      if(mode == CG_FULLSCREEN){
+          /* Set to fullscreen */
+          fullscreen = XInternAtom(cg_display, "_NET_WM_STATE_FULLSCREEN", False);
+          XChangeProperty(cg_display, cg_window, XInternAtom(cg_display, "_NET_WM_STATE", False),
+      		    XA_ATOM, 32, PropModeReplace,
+      		    (unsigned char *)&fullscreen, 1);
+          HideCursor();
+          /* Get the current screen size and set the new one */
+          SetScreenSize(width, height, visual);
+      }
    cg_screen_mode = mode;
    XMapWindow(cg_display, cg_window);
    glXMakeCurrent(cg_display, cg_window, cg_context);

@@ -1,4 +1,5 @@
 #define GL_GLEXT_PROTOTYPES
+#include <GL/glew.h>
 #include <GL/gl.h>
 #include <math.h>
 #include <stdio.h>
@@ -91,11 +92,19 @@ void InitLivin(int width, int height){
    char greetingspath[21];
 
    /* OpenGL related initialization */
+   glewExperimental = GL_TRUE;
+   GLenum err = glewInit();
+   if(GLEW_OK != err)
+   {
+       //Problem: glewInit failed, something is seriously wrong.
+       printf("Error: %s\n", glewGetErrorString(err));
+   }
+   printf( "Status: Using GLEW %s\n", glewGetString(GLEW_VERSION));
+
    glClearColor(0.0, 0.0, 0.0, 0.0);
    glEnable(GL_DEPTH_TEST);
    glEnable(GL_BLEND);
    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-   
    perspectiveMatrix(pmatrix, 35.0, (float)width/(float)height, 0.1, 1500.0);
 
    /* Demo related initialization */
